@@ -1,5 +1,8 @@
 import {Client, ITorrent, Torrent} from "transmission-api";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const transmissionClient = new Client("", {
     username: process.env.TRANSMISSION_USERNAME,
     password: process.env.TRANSMISSION_PASSWORD,
