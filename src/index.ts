@@ -1,19 +1,19 @@
+require('dotenv').config();
+
 import TelegramBot from "node-telegram-bot-api";
-
-import dotenv from "dotenv";
 import {TorrentService} from "./service/torrent/torrent.service";
-
-dotenv.config();
+import {JobService} from "./service/job/job.service";
 
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
 const bot = new TelegramBot(telegramToken, {polling: true});
 
 const whitelistedUsers = process.env.WHITELISTED_USERS!.split(' ').map(u => parseInt(u));
 
+JobService.init((msg: string) => whitelistedUsers.forEach(user => bot.sendMessage(user, msg)));
+
 bot.onText(/\/torrents$/, async (msg) => {
     const chatId = msg.chat.id;
     if (!whitelistedUsers.includes(chatId)) return;
-
     try {
         await bot.sendMessage(
             chatId,
