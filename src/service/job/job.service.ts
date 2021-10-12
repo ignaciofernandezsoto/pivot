@@ -1,13 +1,20 @@
 import {JobHandler} from "./handler/job-handler";
-import {InmaeJobHandler} from "./handler/inmae/inmae-job-handler";
 
-const jobHandlers: JobHandler[] = [
-    InmaeJobHandler
-];
+const jobHandlers: JobHandler[] = [];
 
 const init = (sendTelegramUpdate: (message: string) => void) =>
     jobHandlers.forEach(
-        jh => jh.init(sendTelegramUpdate)
+        jh => {
+            const timer = setInterval(
+                async () => {
+                    const sentUpdate = await jh.execute(sendTelegramUpdate);
+                    if (sentUpdate && jh.config.stopRunningTaskOnUpdate) {
+                        clearInterval(timer);
+                    }
+                },
+                jh.config.executeEveryMs
+            )
+        }
     );
 
 export const JobService = {

@@ -1,3 +1,9 @@
+type JobConfig = {
+    executeEveryMs: number,
+    stopRunningTaskOnUpdate: boolean,
+}
+
 export type JobHandler = {
-    init: (sendTelegramUpdate: (message: string) => void) => void,
+    config: JobConfig,
+    execute: (sendTelegramUpdate: (message: string) => void) => Promise<boolean>,
 }
