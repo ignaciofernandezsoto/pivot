@@ -1,9 +1,12 @@
+import {ServiceType} from "../../service-type";
+
 export type JobConfig = {
+    type: ServiceType,
     executeEveryMs: number,
     stopRunningTaskOnUpdate: boolean,
 }
 
 export type JobHandler = {
     config: JobConfig,
-    execute: (sendTelegramUpdate: (message: string) => void) => Promise<boolean>,
+    execute: (sendUpdate: (message: string) => void) => Promise<boolean>,
 }

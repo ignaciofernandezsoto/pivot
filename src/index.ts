@@ -2,19 +2,32 @@ require('dotenv').config();
 
 import TelegramBot from "node-telegram-bot-api";
 import {TorrentService} from "./service/torrent/torrent.service";
-import {TemperatureService} from "./service/temperature/TemperatureService";
+import {TemperatureService} from "./service/temperature/temperature-service";
 import {JobService} from "./service/job/job.service";
+import { ServiceType } from "./service/service-type";
 
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
 const bot = new TelegramBot(telegramToken, {polling: true});
 
-const whitelistedUsers = process.env.WHITELISTED_USERS!.split(' ').map(u => parseInt(u));
+const whitelistedServiceUsers: { [key in ServiceType]: number[]; } = {
+    "torrent": process.env.WHITELISTED_TORRENT_USERS!.split(',').map(u => parseInt(u)),
+    "temperature": process.env.WHITELISTED_TEMPERATURE_USERS!.split(',').map(u => parseInt(u))
+}
 
-JobService.init((msg: string) => whitelistedUsers.forEach(user => bot.sendMessage(user, msg)));
+Object.keys(whitelistedServiceUsers).forEach(jobType =>
+    JobService.init(
+        jobType as ServiceType,
+        (msg: string) => {
+            const whitelistedUsersForService = whitelistedServiceUsers[jobType as ServiceType]
+            whitelistedUsersForService.forEach(
+                user => bot.sendMessage(user, msg)
+            )
+        })
+);
 
 bot.onText(/\/temperature$/, async (msg) => {
     const chatId = msg.chat.id;
-    if (!whitelistedUsers.includes(chatId)) return;
+    if (!whitelistedServiceUsers["temperature"].includes(chatId)) return;
     try {
         await bot.sendMessage(
             chatId,
@@ -31,7 +44,7 @@ bot.onText(/\/temperature$/, async (msg) => {
 
 bot.onText(/\/torrents$/, async (msg) => {
     const chatId = msg.chat.id;
-    if (!whitelistedUsers.includes(chatId)) return;
+    if (!whitelistedServiceUsers["torrent"].includes(chatId)) return;
     try {
         await bot.sendMessage(
             chatId,
@@ -48,7 +61,7 @@ bot.onText(/\/torrents$/, async (msg) => {
 
 bot.onText(/\/torrents add (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
-    if (!whitelistedUsers.includes(chatId)) return;
+    if (!whitelistedServiceUsers["torrent"].includes(chatId)) return;
 
     const magnetUri = match![1];
 
@@ -68,7 +81,7 @@ bot.onText(/\/torrents add (.+)/, async (msg, match) => {
 
 bot.onText(/\/torrents delete (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
-    if (!whitelistedUsers.includes(chatId)) return;
+    if (!whitelistedServiceUsers["torrent"].includes(chatId)) return;
 
     const id = parseInt(match![1]);
 
