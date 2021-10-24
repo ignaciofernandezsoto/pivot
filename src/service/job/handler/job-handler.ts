@@ -1,4 +1,4 @@
-type JobConfig = {
+export type JobConfig = {
     executeEveryMs: number,
     stopRunningTaskOnUpdate: boolean,
 }

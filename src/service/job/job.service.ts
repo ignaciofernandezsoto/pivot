@@ -1,6 +1,9 @@
 import {JobHandler} from "./handler/job-handler";
+import {TemperatureHandler} from "./handler/sensor/temperature/temperature-handler";
 
-const jobHandlers: JobHandler[] = [];
+const jobHandlers: JobHandler[] = [
+    TemperatureHandler
+];
 
 const init = (sendTelegramUpdate: (message: string) => void) =>
     jobHandlers.forEach(

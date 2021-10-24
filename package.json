@@ -28,6 +28,7 @@
   "dependencies": {
     "axios": "^0.22.0",
     "dotenv": "^10.0.0",
+    "ds18b20-raspi": "^0.3.6",
     "node-telegram-bot-api": "^0.54.0",
     "transmission-api": "^0.0.1"
   }
