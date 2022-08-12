@@ -11,6 +11,7 @@ pipeline {
 
                 sh 'echo "WHITELISTED_TORRENT_USERS=${WHITELISTED_TORRENT_USERS}" >> .env'
                 sh 'echo "WHITELISTED_TEMPERATURE_USERS=${WHITELISTED_TEMPERATURE_USERS}" >> .env'
+                sh 'echo "WHITELISTED_TRAIN_TICKETS=${WHITELISTED_TRAIN_TICKETS}" >> .env'
                 sh 'echo "MIN_TEMPERATURE=${MIN_TEMPERATURE}" >> .env'
                 sh 'echo "MAX_TEMPERATURE=${MAX_TEMPERATURE}" >> .env'
                 sh 'echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" >> .env'
