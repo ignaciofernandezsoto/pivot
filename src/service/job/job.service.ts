@@ -10,6 +10,7 @@ const jobHandlers: JobHandler[] = [
 
 const init = (serviceType: ServiceType, sendTelegramUpdate: (message: string) => void) =>
     jobHandlers
+        .filter(jh => jh.config.isOn)
         .filter(jh => jh.config.type === serviceType)
         .forEach(
             jh => {

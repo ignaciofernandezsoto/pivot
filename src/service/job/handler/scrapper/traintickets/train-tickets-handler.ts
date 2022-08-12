@@ -3,6 +3,7 @@ import {TrainTicketsService} from "../../../../scrapper/traintickets/train-ticke
 
 const config = {
     type: "train-tickets" as const,
+    isOn: true,
     executeEveryMs: 43200000, // 12 hours
     stopRunningTaskOnUpdate: false,
 }

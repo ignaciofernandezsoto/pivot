@@ -2,6 +2,7 @@ import {ServiceType} from "../../service-type";
 
 export type JobConfig = {
     type: ServiceType,
+    isOn: boolean,
     executeEveryMs: number,
     stopRunningTaskOnUpdate: boolean,
 }

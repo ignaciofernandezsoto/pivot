@@ -3,6 +3,7 @@ import {TemperatureService} from "../../../../temperature/temperature-service";
 
 const config = {
     type: "temperature" as const,
+    isOn: false,
     executeEveryMs: 900000,
     stopRunningTaskOnUpdate: false,
     minTemperature: parseInt(process.env.MIN_TEMPERATURE!),
