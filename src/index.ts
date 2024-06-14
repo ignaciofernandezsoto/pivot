@@ -8,7 +8,7 @@ import {ServiceType} from "./service/service-type";
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
 const bot = new TelegramBot(telegramToken, {polling: true});
 
-const whitelistedServiceUsers: { [key in ServiceType]: number[]; } = {
+const whitelistedServiceUsers = {
     "torrent": process.env.WHITELISTED_TORRENT_USERS!.split(',').map(u => parseInt(u)),
 }
 
