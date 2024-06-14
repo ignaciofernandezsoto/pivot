@@ -9,7 +9,9 @@ pipeline {
             steps {
                 sh 'touch .env'
 
+                sh 'echo "APIPI_BASE_URL=${APIPI_BASE_URL}" >> .env'
                 sh 'echo "WHITELISTED_TORRENT_USERS=${WHITELISTED_TORRENT_USERS}" >> .env'
+                sh 'echo "WHITELISTED_MOVIE_USERS=${WHITELISTED_MOVIE_USERS}" >> .env'
                 sh 'echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" >> .env'
                 sh 'echo "TRANSMISSION_USERNAME=${TRANSMISSION_USERNAME}" >> .env'
                 sh 'echo "TRANSMISSION_PASSWORD=${TRANSMISSION_PASSWORD}" >> .env'

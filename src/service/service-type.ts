@@ -1,1 +1,4 @@
-export type ServiceType = "torrent"
+export enum ServiceType {
+    TORRENT,
+    MOVIE
+}
