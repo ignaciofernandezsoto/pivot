@@ -8,8 +8,19 @@ import {JobService} from "./service/job/job.service";
 import {ServiceType} from "./service/service-type";
 
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
-const bot = new TelegramBot(telegramToken, {polling: true});
-
+const bot = new TelegramBot(
+    telegramToken,
+    {
+        polling: true,
+        request: {
+            agentOptions: {
+                keepAlive: true,
+                family: 4,
+            },
+            url: "https://api.telegram.org",
+        }
+    }
+);
 const whitelistedServiceUsers: { [key in ServiceType]: number[] } = {
     [ServiceType.TORRENT]: process.env.WHITELISTED_TORRENT_USERS!.split(',').map(u => parseInt(u)),
     [ServiceType.MOVIE]: process.env.WHITELISTED_MOVIE_USERS!.split(',').map(u => parseInt(u)),
