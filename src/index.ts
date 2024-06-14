@@ -1,3 +1,5 @@
+import {MovieService} from "./service/movie/movie.service";
+
 require('dotenv').config();
 
 import TelegramBot from "node-telegram-bot-api";
@@ -81,4 +83,30 @@ bot.onText(/\/torrents delete (.+)/, async (msg, match) => {
             `${e}`
         );
     }
+});
+
+bot.onText(/\/movies(?:\s+(.+))?/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    if (!whitelistedServiceUsers[ServiceType.MOVIE].includes(chatId)) return;
+
+    await bot.sendMessage(
+        chatId,
+        "ON IT!!"
+    )
+
+    const movieQuery = match?.at(1);
+
+    try {
+        await bot.sendMessage(
+            chatId,
+            JSON.stringify(await MovieService.getAllMovies(movieQuery))
+        )
+    } catch (e) {
+        console.log(e);
+        await bot.sendMessage(
+            chatId,
+            `${e}`
+        );
+    }
+
 });
