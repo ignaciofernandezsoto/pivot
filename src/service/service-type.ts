@@ -1,1 +1,1 @@
-export type ServiceType = "torrent" | "temperature" | "train-tickets"
+export type ServiceType = "torrent"

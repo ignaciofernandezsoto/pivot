@@ -13,12 +13,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/dateformat": "^5.0.0",
     "@types/axios": "^0.14.0",
-    "@types/jsdom": "^20.0.0",
     "@types/node": "^16.9.6",
     "@types/node-telegram-bot-api": "^0.51.4",
-    "@types/qs": "^6.9.7",
     "@typescript-eslint/eslint-plugin": "^4.31.2",
     "@typescript-eslint/parser": "^4.31.2",
     "eslint": "^7.32.0",
@@ -29,13 +26,9 @@
   },
   "description": "",
   "dependencies": {
-    "axios": "^0.22.0",
-    "dateformat": "^4.6.3",
+    "axios": "^1.7.2",
     "dotenv": "^10.0.0",
-    "ds18b20-raspi": "^0.3.6",
-    "jsdom": "^20.0.0",
-    "node-telegram-bot-api": "^0.54.0",
-    "qs": "^6.11.0",
+    "node-telegram-bot-api": "^0.63.0",
     "transmission-api": "^0.0.1"
   }
 }

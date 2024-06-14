@@ -1,11 +1,7 @@
 import {JobHandler} from "./handler/job-handler";
-import {TemperatureHandler} from "./handler/sensor/temperature/temperature-handler";
 import {ServiceType} from "../service-type";
-import {TrainTicketsHandler} from "./handler/scrapper/traintickets/train-tickets-handler";
 
 const jobHandlers: JobHandler[] = [
-    TemperatureHandler,
-    TrainTicketsHandler,
 ];
 
 const init = (serviceType: ServiceType, sendTelegramUpdate: (message: string) => void) =>
