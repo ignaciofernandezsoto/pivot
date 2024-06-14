@@ -6,6 +6,9 @@ import TelegramBot from "node-telegram-bot-api";
 import {TorrentService} from "./service/torrent/torrent.service";
 import {JobService} from "./service/job/job.service";
 import {ServiceType} from "./service/service-type";
+import {ErrorResultDto, MoviesDto} from "./service/movie/dto";
+
+const DOWNLOAD_MOVIE_CALLBACK_PREFIX = "CALLBACK_DOWNLOAD_MOVIE_"
 
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
 const bot = new TelegramBot(
@@ -100,24 +103,63 @@ bot.onText(/\/movies(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     if (!whitelistedServiceUsers[ServiceType.MOVIE].includes(chatId)) return;
 
-    await bot.sendMessage(
-        chatId,
-        "ON IT!!"
-    )
-
     const movieQuery = match?.at(1);
 
     try {
-        await bot.sendMessage(
+        const moviesResult = await MovieService.getAllMovies(movieQuery)
+
+        if (!moviesResult.success) {
+            await bot.sendMessage(
+                chatId,
+                `Unexpected error while fetching movies. Error: ${(moviesResult.data as ErrorResultDto).message}`
+            )
+        }
+
+        const movies = moviesResult.data as MoviesDto
+
+        const movie = movies.movies[0]
+
+        await bot.sendMediaGroup(
             chatId,
-            JSON.stringify(await MovieService.getAllMovies(movieQuery))
+            [{type: "photo", media: movie.displayImageUrl, caption: movie.title}],
         )
+
+        await bot.sendMessage(chatId, 'Choose from the following', {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: 'Download this movie',
+                            callback_data: `${DOWNLOAD_MOVIE_CALLBACK_PREFIX}${movie.yifyId}`
+                        }
+                    ]
+                ]
+            }
+        })
     } catch (e) {
         console.log(e);
         await bot.sendMessage(
             chatId,
             `${e}`
         );
+    }
+
+});
+
+bot.on('callback_query', async (callbackQuery) => {
+    const action = callbackQuery.data;
+
+    if (!action) return
+
+    const msg = callbackQuery.message;
+
+    if (!msg) return
+
+    const chatId = msg.chat.id
+
+    if (action.startsWith(DOWNLOAD_MOVIE_CALLBACK_PREFIX)) {
+        const movieId = action.split(DOWNLOAD_MOVIE_CALLBACK_PREFIX)[1]
+        await bot.sendMessage(chatId, `You picked movie ID ${movieId}`)
     }
 
 });
