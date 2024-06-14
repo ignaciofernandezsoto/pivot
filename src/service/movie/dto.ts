@@ -1,5 +1,14 @@
+export interface MoviesPayloadDto {
+    q?: string,
+    limit?: number,
+    page?: number
+}
+
 export interface MoviesDto {
-    movies: MovieDto[]
+    movies: MovieDto[],
+    total: number,
+    limit: number,
+    page: number,
 }
 
 export interface MovieDto {
