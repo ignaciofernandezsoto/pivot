@@ -10,6 +10,7 @@ pipeline {
                 sh 'touch .env'
 
                 sh 'echo "APIPI_BASE_URL=${APIPI_BASE_URL}" >> .env'
+                sh 'echo "MOVIE_DOWNLOAD_DIR=${PLEX_MOVIE_DIR}" >> .env'
                 sh 'echo "WHITELISTED_TORRENT_USERS=${WHITELISTED_TORRENT_USERS}" >> .env'
                 sh 'echo "WHITELISTED_MOVIE_USERS=${WHITELISTED_MOVIE_USERS}" >> .env'
                 sh 'echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" >> .env'

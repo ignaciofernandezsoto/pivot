@@ -11,15 +11,19 @@ export interface MoviesDto {
     page: number,
 }
 
-export interface MovieDto {
-    yifyId: number,
-    title: string,
+export interface MovieDto extends MinimalMovieDataDto {
     description: string,
-    displayImageUrl: string
+    displayImageUrl: string,
     year: number,
     rating: number,
-    torrentHash: string
-    hasSubs: boolean
+    hasSubs: boolean,
+}
+
+export interface MinimalMovieDataDto {
+    yifyId: number,
+    imdbId: string,
+    title: string,
+    torrentHash: string,
 }
 
 export interface ErrorResultDto {

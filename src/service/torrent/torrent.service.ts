@@ -33,8 +33,8 @@ const getAllAsMessage = async () => {
     }
 }
 
-const add = async (magnetUri: string) => {
-    const torrent = await transmissionClient.addTorrent(magnetUri);
+const add = async (magnetUri: string, options?: { filename: string, "download-dir": string, "priority-high": number[], "priority-normal": number[], "priority-low": number[] }) => {
+    const torrent = await transmissionClient.addTorrent(magnetUri, options);
     return addedTorrentDataToDescription(torrent);
 }
 

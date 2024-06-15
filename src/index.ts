@@ -2,15 +2,19 @@ import {MovieService} from "./service/movie/movie.service";
 
 require('dotenv').config();
 
-import TelegramBot, {EditMessageReplyMarkupOptions, InlineKeyboardMarkup} from "node-telegram-bot-api";
+import TelegramBot, {InlineKeyboardMarkup} from "node-telegram-bot-api";
 import {TorrentService} from "./service/torrent/torrent.service";
 import {JobService} from "./service/job/job.service";
 import {ServiceType} from "./service/service-type";
-import {ErrorResultDto, MoviesDto} from "./service/movie/dto";
+import {ErrorResultDto, MinimalMovieDataDto, MoviesDto} from "./service/movie/dto";
 
-const DOWNLOAD_MOVIE_CALLBACK_PREFIX = "CALLBACK_DOWNLOAD_MOVIE_"
-const NEXT_MOVIE_CALLBACK_PREFIX = "NEXT_MOVIE_CALLBACK_PREFIX"
-const CANCEL_MOVIE_CALLBACK_PREFIX = "CANCEL_MOVIE_CALLBACK"
+enum CallbackType {
+    DOWNLOAD_MOVIE,
+    NEXT_MOVIE,
+    CANCEL_MOVIE
+}
+
+const MOVIE_DOWNLOAD_DIR = process.env.MOVIE_DOWNLOAD_DIR!;
 
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN!;
 const bot = new TelegramBot(
@@ -26,6 +30,7 @@ const bot = new TelegramBot(
         }
     }
 );
+
 const whitelistedServiceUsers: { [key in ServiceType]: number[] } = {
     [ServiceType.TORRENT]: process.env.WHITELISTED_TORRENT_USERS!.split(',').map(u => parseInt(u)),
     [ServiceType.MOVIE]: process.env.WHITELISTED_MOVIE_USERS!.split(',').map(u => parseInt(u)),
@@ -43,6 +48,17 @@ Object.keys(whitelistedServiceUsers)
                 );
             })
     );
+
+const ytsTrackers = [
+    "udp://glotorrents.pw:6969/announce",
+    "udp://tracker.opentrackr.org:1337/announce",
+    "udp://torrent.gresille.org:80/announce",
+    "udp://tracker.openbittorrent.com:80",
+    "udp://tracker.coppersurfer.tk:6969",
+    "udp://tracker.leechers-paradise.org:6969",
+    "udp://p4p.arenabg.ch:1337",
+    "udp://tracker.internetwarriors.net:1337"
+]
 
 bot.onText(/\/torrents$/, async (msg) => {
     const chatId = msg.chat.id;
@@ -111,7 +127,6 @@ bot.onText(/\/movies(?:\s+(.+))?/, async (msg, match) => {
 
         await getMovie({
             query,
-            limit: 1,
             page: 1,
             telegramData: {
                 chatId: chatId,
@@ -139,23 +154,47 @@ bot.on('callback_query', async (callbackQuery) => {
 
     const chatId = msg.chat.id
 
-    if (action.startsWith(DOWNLOAD_MOVIE_CALLBACK_PREFIX)) {
-        const movieId = action.split(DOWNLOAD_MOVIE_CALLBACK_PREFIX)[1]
-        await bot.sendMessage(chatId, `You picked movie ID ${movieId}`)
+    if (action.startsWith(CallbackType.DOWNLOAD_MOVIE.toString())) {
+        const yifyId = action.substring(CallbackType.DOWNLOAD_MOVIE.toString().length)
+
+        const movieResult = await MovieService.getMovie(parseInt(yifyId))
+
+        if (!movieResult.success) {
+            await bot.sendMessage(
+                chatId,
+                `Unexpected error while fetching movie ${yifyId}. Error: ${(movieResult.data as ErrorResultDto).message}`
+            )
+        }
+
+        const movie = movieResult.data as MinimalMovieDataDto
+
+        const torrentDescription = await TorrentService.add(
+            getYtsMagnetUri(movie.torrentHash, movie.title),
+            {
+                filename: movie.title,
+                "download-dir": MOVIE_DOWNLOAD_DIR,
+                "priority-high": [],
+                "priority-normal": [],
+                "priority-low": [],
+            },
+        )
+
         await bot.deleteMessage(chatId, msg.message_id)
+
+        await bot.sendMessage(chatId, torrentDescription)
     }
 
-    if (action === CANCEL_MOVIE_CALLBACK_PREFIX) {
+    if (action === CallbackType.CANCEL_MOVIE.toString()) {
         await bot.sendMessage(chatId, "Canceled movie search")
         await bot.deleteMessage(chatId, msg.message_id)
     }
 
-    if (action.startsWith(NEXT_MOVIE_CALLBACK_PREFIX)) {
-        const [query, limit, page, movieInfoMessageId] = action.split(NEXT_MOVIE_CALLBACK_PREFIX)[1].split("_")
+    if (action.startsWith(CallbackType.NEXT_MOVIE.toString())) {
+
+        const [query, page, movieInfoMessageId] = action.substring(CallbackType.NEXT_MOVIE.toString().length).split("_")
 
         await getMovie({
             query,
-            limit: parseInt(limit),
             page: parseInt(page) + 1,
             telegramData: {
                 chatId: chatId,
@@ -183,7 +222,6 @@ interface TelegramMessageData {
 
 interface NextMoviePayload {
     query?: string,
-    limit: number,
     page: number,
     telegramData: TelegramContextData
 }
@@ -192,12 +230,11 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
     async (nextMoviePayload: NextMoviePayload) => {
         const {
             query,
-            limit,
             page,
             telegramData: {chatId, movieInfo: {messageId: pastMovieInfoMessageId} = {}, cta: {messageId: pastCtaMessageId} = {}}
         } = nextMoviePayload
 
-        const moviesResult = await MovieService.getAllMovies(query, limit, page)
+        const moviesResult = await MovieService.getAllMovies(query, 1, page)
 
         if (!moviesResult.success) {
             await bot.sendMessage(
@@ -257,19 +294,19 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
                 [
                     {
                         text: 'Download this movie',
-                        callback_data: `${DOWNLOAD_MOVIE_CALLBACK_PREFIX}${movie.yifyId}`
+                        callback_data: `${CallbackType.DOWNLOAD_MOVIE}${movie.yifyId}`
                     }
                 ],
                 [
                     {
                         text: 'Next movie',
-                        callback_data: `${NEXT_MOVIE_CALLBACK_PREFIX}${query}_${movies.limit}_${movies.page}_${movieInfoMessageId}`
+                        callback_data: `${CallbackType.NEXT_MOVIE}${query}_${movies.page}_${movieInfoMessageId}`
                     }
                 ],
                 [
                     {
                         text: 'Cancel',
-                        callback_data: `${CANCEL_MOVIE_CALLBACK_PREFIX}`
+                        callback_data: `${CallbackType.CANCEL_MOVIE}`
                     }
                 ]
             ]
@@ -288,6 +325,8 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
                 reply_markup: replyMarkup
             })
         }
-
-
     }
+
+const getYtsMagnetUri: (torrentHash: string, movieTitle: string) => string = (torrentHash: string, movieTitle: string) => {
+    return `magnet:?xt=urn:btih:${torrentHash}&dn=${encodeURI(movieTitle)}&${ytsTrackers.map(t => `tr=${t}`).join("&")}`
+}
