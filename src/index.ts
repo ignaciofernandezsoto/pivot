@@ -2,11 +2,11 @@ import {MovieService} from "./service/movie/movie.service";
 
 require('dotenv').config();
 
-import TelegramBot, {InlineKeyboardMarkup} from "node-telegram-bot-api";
+import TelegramBot, {InlineKeyboardMarkup, InputMediaPhoto} from "node-telegram-bot-api";
 import {TorrentService} from "./service/torrent/torrent.service";
 import {JobService} from "./service/job/job.service";
 import {ServiceType} from "./service/service-type";
-import {ErrorResultDto, MinimalMovieDataDto, MoviesDto} from "./service/movie/dto";
+import {ErrorResultDto, MinimalMovieDataDto, MovieDto, MoviesDto} from "./service/movie/dto";
 
 enum CallbackType {
     DOWNLOAD_MOVIE,
@@ -268,13 +268,16 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
 
         let movieInfoMessageId
 
+        const media: InputMediaPhoto = {
+            type: "photo",
+            media: movie.displayImageUrl,
+            caption: getMovieCaptionHTML(movie),
+            parse_mode: "HTML"
+        };
+
         if (pastMovieInfoMessageId) {
             await bot.editMessageMedia(
-                {
-                    type: "photo",
-                    media: movie.displayImageUrl,
-                    caption: movie.title,
-                },
+                media,
                 {
                     chat_id: chatId,
                     message_id: pastMovieInfoMessageId,
@@ -284,7 +287,7 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
         } else {
             const movieInfoMessage = (await bot.sendMediaGroup(
                 chatId,
-                [{type: "photo", media: movie.displayImageUrl, caption: movie.title}],
+                [media],
             ))[0]
             movieInfoMessageId = movieInfoMessage.message_id
         }
@@ -330,3 +333,14 @@ const getMovie: (nextMoviePayload: NextMoviePayload) => Promise<void> =
 const getYtsMagnetUri: (torrentHash: string, movieTitle: string) => string = (torrentHash: string, movieTitle: string) => {
     return `magnet:?xt=urn:btih:${torrentHash}&dn=${encodeURI(movieTitle)}&${ytsTrackers.map(t => `tr=${t}`).join("&")}`
 }
+
+const getMovieCaptionHTML = (movie: MovieDto) => `
+<b>${movie.title}</b>
+
+<pre>${
+    movie.description.length > 768 ? movie.description.substring(0, 768) + "..." : movie.description
+}</pre>
+
+📅 Year: ${movie.year}
+⭐ Rating: ${movie.rating}
+`
